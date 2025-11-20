@@ -1,11 +1,31 @@
-# nixpacks.toml
-[phases.setup]
-nixLibs = ['php83', 'php83Extensions.intl', 'php83Extensions.zip', 'php83Extensions.mbstring', 'php83Extensions.pgsql']
+# nixpacks.toml → versi SUPER AMPUH 2025 (tested Laravel + Filament + Pest)
 
-[phases.build]
-cmds = [
-  "composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist"
+# Paksa PHP 8.3
+providers = ["php@8.3"]
+
+# Install extensions yang wajib
+[phases.setup]
+nixPkgs = ["php83", "php83Packages.composer"]
+nixLibs = [
+  "php83Extensions.intl",
+  "php83Extensions.zip",
+  "php83Extensions.mbstring",
+  "php83Extensions.pdo",
+  "php83Extensions.pgsql",
+  "php83Extensions.gd",
+  "php83Extensions.bcmath"
 ]
 
+# Install dependencies tanpa dev (ini yang bikin Pest/PHPUnit 8.3 ga ngaco)
+[phases.build]
+cmds = [
+  "composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress"
+]
+
+# Build assets kalau pakai Vite (Filament biasanya butuh)
+[phases.assets]
+cmds = ["npm install && npm run build"]
+
+# Start command
 [start]
 cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
