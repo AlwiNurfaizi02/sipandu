@@ -21,3 +21,18 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Environment
+.env
+.env.backup
+.env.*.local
+
+# Dependencies
+/vendor
+/node_modules
+
+# Laravel
+/storage/*.key
+/public/storage
+/public/hot
+/bootstrap/cache/*.php

@@ -1,31 +1,51 @@
-# nixpacks.toml → versi SUPER AMPUH 2025 (tested Laravel + Filament + Pest)
+# nixpacks.toml - Fix Final untuk Sipandu (Laravel + Filament) di Railway
 
-# Paksa PHP 8.3
-providers = ["php@8.3"]
+# Providers: Force PHP 8.3
+[[providers]]
+nix = "php83"
 
-# Install extensions yang wajib
+# Setup Phase: Install PHP 8.3 + Composer + Extensions (intl, zip, pgsql)
 [phases.setup]
-nixPkgs = ["php83", "php83Packages.composer"]
+nixPkgs = [
+  "php83",
+  "php83Packages.composer",
+  "nodejs_22"  # Kalau ada Vite/Filament assets
+]
 nixLibs = [
-  "php83Extensions.intl",
-  "php83Extensions.zip",
+  "php83Extensions.intl",      # Fix Filament
+  "php83Extensions.zip",       # Fix OpenSpout
   "php83Extensions.mbstring",
-  "php83Extensions.pdo",
-  "php83Extensions.pgsql",
+  "php83Extensions.pdo_pgsql",
+  "php83Extensions.pgsql",     # PostgreSQL
   "php83Extensions.gd",
-  "php83Extensions.bcmath"
+  "php83Extensions.exif",
+  "php83Extensions.bcmath",
+  "php83Extensions.pcntl"
 ]
 
-# Install dependencies tanpa dev (ini yang bikin Pest/PHPUnit 8.3 ga ngaco)
+# Build Phase: Composer NO-DEV (skip Pest/PHPUnit) + Laravel optimize
 [phases.build]
 cmds = [
-  "composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress"
+  "composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress --ignore-platform-reqs",
+  "php artisan key:generate --force --no-interaction --quiet",
+  "php artisan config:cache",
+  "php artisan route:cache",
+  "php artisan view:cache"
 ]
 
-# Build assets kalau pakai Vite (Filament biasanya butuh)
+# Assets Phase: Build NPM/Vite untuk Filament (kalau ada package.json)
 [phases.assets]
-cmds = ["npm install && npm run build"]
+cmds = [
+  "npm ci --only=production --no-audit --no-fund",
+  "npm run build --if-present"
+]
 
-# Start command
+# Start Phase: Jalankan server
 [start]
 cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
+
+# Environment: Production defaults
+[env]
+PHP_VERSION = "8.3"
+APP_ENV = "production"
+APP_DEBUG = "false"
